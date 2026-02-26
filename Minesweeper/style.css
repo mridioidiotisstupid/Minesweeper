@@ -1,0 +1,25 @@
+#board {
+  display: grid;
+  gap: 2px;
+  margin-top: 20px;
+}
+
+.cell {
+  width: 35px;
+  height: 35px;
+  background: #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.cell.revealed {
+  background: #eee;
+  cursor: default;
+}
+
+.cell.mine {
+  background: red;
+}
