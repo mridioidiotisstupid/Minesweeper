@@ -105,6 +105,9 @@ function renderBoard() {
       cell.classList.add("cell");
 //adds an event when its clicked, which is the handleclick function. makes each cell clickable.
       cell.addEventListener("click", () => handleClick(r, c));
+
+      cell.addEventListener("contextmenu", (e) => {e.preventDefault(); placeFlag(r,c);})
+    
 //makes it so each time a cell is made, it is put as a child of the boardelement and placed furthest back.
       boardElement.appendChild(cell);
     }
@@ -175,4 +178,33 @@ function updateBoard() {
       }
     }
   });
+  
+
+
+
+  
 }
+//AI CODE END
+function placeFlag (r, c)
+  {
+    if(gameOver) return;
+    if(board[r][c].revealed) return;
+//grabs the DOM element that corresponse to the [r][c] position. lets think about this, if the position is [1][1], for it to correspond in the index, it needs to be 11,
+//and it becomes 11 when we multiply r with cols, and add c. same thing, if the position is [0][5], 0*10 is zero so it gets the excact index number that corresponds to
+// the cell we want to place a flag on
+   let cellElement = document.querySelectorAll(".cell")[r * cols + c];
+
+
+   //acts as a toggle. if it already is a flag, it will remove the flag, but if not, it will make it a flag.
+if(cellElement.classList.contains("flag")) {
+  cellElement.classList.remove("flag");
+  cellElement.textContent = "";
+}
+else {
+  cellElement.classList.add("flag");
+  cellElement.textContent = "🚩";
+}
+
+    
+
+  }
