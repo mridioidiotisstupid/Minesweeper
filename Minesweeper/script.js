@@ -2,10 +2,20 @@ const rows = 10;
 const cols = 10;
 const mineCount = 15;
 
+var score = 0;
+var scoreMultiplier = 100;
 let board = [];
 let gameOver = false;
 
+
+
 const boardElement = document.getElementById("board");
+
+const restartButton = document.getElementById("restartButton");
+
+
+
+
 
 init();
 
@@ -32,6 +42,7 @@ function createBoardData() {
         //gives each cell attributes, that is by default set to the lowest or false. the same as creating a class in c#, but here you can just make variables and it will
         //identify itself based on the data given.
         mine: false,
+        flag: false,
         revealed: false,
         neighborMines: 0,
       };
@@ -107,6 +118,7 @@ function renderBoard() {
       cell.addEventListener("click", () => handleClick(r, c));
 
       cell.addEventListener("contextmenu", (e) => {e.preventDefault(); placeFlag(r,c);})
+
     
 //makes it so each time a cell is made, it is put as a child of the boardelement and placed furthest back.
       boardElement.appendChild(cell);
@@ -119,16 +131,33 @@ function renderBoard() {
 function handleClick(r, c) {
   if (gameOver) return;
   if (board[r][c].revealed) return;
+  if (board[r][c].flag) return;
 
   revealCell(r, c);
   updateBoard();
 
   if (board[r][c].mine) {
-    gameOver = true;
-    alert("Game Over!");
+    
+    GameOver();
   }
 }
+function GameOver()
+{
+  gameOver = true;
+  restartButton.addEventListener("click", () => restartGame());
+  restartButton.style.display = "block";
 
+
+}
+function restartGame()
+{
+  board = [];
+  gameOver = false;
+  boardElement.innerHTML = "";
+  restartButton.style.display = "none";
+  init();
+
+}
 function revealCell(r, c) {
   if (
     //another boundary check and also checks if the cell has already been revealed.
@@ -142,6 +171,8 @@ function revealCell(r, c) {
   }
 
   board[r][c].revealed = true;
+ 
+
 
   if (board[r][c].neighborMines === 0 && !board[r][c].mine) {
     for (let dr = -1; dr <= 1; dr++) {
@@ -150,6 +181,8 @@ function revealCell(r, c) {
       }
     }
   }
+  updateScore(board[r][c].neighborMines * scoreMultiplier);
+
 }
 
 
@@ -199,12 +232,25 @@ function placeFlag (r, c)
 if(cellElement.classList.contains("flag")) {
   cellElement.classList.remove("flag");
   cellElement.textContent = "";
+  board[r][c].flag = false;
 }
 else {
   cellElement.classList.add("flag");
   cellElement.textContent = "🚩";
+  board[r][c].flag = true;
 }
 
     
+
+  }
+
+  function updateScore(scoreIncrease)
+  {
+    score += scoreIncrease;
+
+
+   let scoreElement = document.getElementById("score").textContent = score;
+
+
 
   }
