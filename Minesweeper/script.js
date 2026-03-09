@@ -3,7 +3,10 @@ const cols = 10;
 const mineCount = 15;
 
 var score = 0;
+var highScore = 0;
+
 var scoreMultiplier = 100;
+
 let board = [];
 let gameOver = false;
 
@@ -146,7 +149,7 @@ function GameOver()
   gameOver = true;
   restartButton.addEventListener("click", () => restartGame());
   restartButton.style.display = "block";
-
+score = 0;
 
 }
 function restartGame()
@@ -247,6 +250,11 @@ else {
   function updateScore(scoreIncrease)
   {
     score += scoreIncrease;
+    if(score > highScore)
+    {
+      highScore = score;
+      let highScoreElement = document.getElementById("highScore").textContent = highScore;
+    }
 
 
    let scoreElement = document.getElementById("score").textContent = score;
