@@ -1,11 +1,18 @@
-const rows = 10;
-const cols = 10;
-const mineCount = 15;
+const rows = 5;
+const cols = 5;
+const mineCount = 1;
 
+let multiplierCount = 3;
+
+let minesLeft;
 var score = 0;
 var highScore = 0;
 
-var scoreMultiplier = 100;
+var gold;
+
+
+var scoreMultiplier = 3;
+var scoreIncrease = 50;
 
 let board = [];
 let gameOver = false;
@@ -31,8 +38,12 @@ function init() {
 
   createBoardData();
   placeMines();
+  placeScoreMult();
   calculateNumbers();
   renderBoard();
+  UpdateScore();
+  updateBoard();
+  minesLeft = mineCount;
 }
 
 
@@ -45,6 +56,7 @@ function createBoardData() {
         //gives each cell attributes, that is by default set to the lowest or false. the same as creating a class in c#, but here you can just make variables and it will
         //identify itself based on the data given.
         mine: false,
+        multiplier: false,
         flag: false,
         revealed: false,
         neighborMines: 0,
@@ -68,7 +80,53 @@ function placeMines() {
     }
   }
 }
-//calculate each cells number
+//places multipliers around the board. a mine cannot be a multiplier.
+function placeScoreMult()
+{
+  let placed = 0;
+//Places multiplier
+  while (placed < multiplierCount)
+  {
+    let r = Math.floor(Math.random() * rows);
+    let c = Math.floor(Math.random() * cols);
+//checks that the randomly selected cell is not already a multiplier or mine.
+    if (board[r][c].mine || board[r][c].multiplier) continue;
+
+    let canPlace = true;
+    //failed attempt at making it so multipliers cannot be placed inside a 3x3 radius of each other.
+    //it didnt work, but i will let the code stay here.
+    for (let dr = -1; dr <= 1 && canPlace; dr++)
+    {
+      for (let dc = -1; dc <= 1 && canPlace; dc++)
+      {
+        if (dr === 0 && dc === 0) continue;
+        let nr = r + dr;
+        let nc = c + dc;
+        if (nr >= 0 &&
+            nr < rows &&
+            nc >= 0 &&
+            nc < cols &&
+            !board[nr][nc].multiplier)
+            {
+              canPlace = true;
+            }
+            else {
+              canPlace = false;
+            }
+      }
+    }
+    //places it and increased placed, which controls the while loop. when all 3 multipliers have been placed this function
+    //will stop running
+    if(canPlace)
+    {
+      board[r][c].multiplier = true;
+      placed++;
+      console.log(r,c);
+    }
+  }
+}
+ 
+//calculate each cells number based on how many mines are surrounding it in a 3x3 radius.
 function calculateNumbers() {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -76,7 +134,7 @@ function calculateNumbers() {
       if (board[r][c].mine) continue;
 
       let count = 0;
-//finds all the neighbours. since we are calculating [r][c], dr and dc let us find the ones surrounding [r][c]
+      //finds all the neighbours. since we are calculating [r][c], dr and dc let us find the ones surrounding [r][c]
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
           // nr and nc stands for neighboring row and collumn.
@@ -143,24 +201,47 @@ function handleClick(r, c) {
     
     GameOver();
   }
+  if (board[r][c].multiplier) {
+
+  }
 }
+//Freezes clicks when you press a mine
 function GameOver()
 {
   gameOver = true;
   restartButton.addEventListener("click", () => restartGame());
-  restartButton.style.display = "block";
-score = 0;
-
+showRestartBtn();
 }
+//gives you gold when you have flagged all mines
+function GameWon()
+{
+  showRestartBtn();
+  IncreaseGold(score);
+}
+//restarts the board and other data so you can play again. you keep your highscore and gold.
 function restartGame()
 {
   board = [];
   gameOver = false;
   boardElement.innerHTML = "";
-  restartButton.style.display = "none";
+  hideRestartBtn();
+  score = 0;
+
   init();
 
 }
+//makes the restartBtn visible and clickable
+function showRestartBtn()
+{
+  restartButton.style.display = "block";
+}
+//hides the restartBtn and makes it unclickable
+function hideRestartBtn()
+{
+  restartButton.style.display = "none";
+
+}
+//reveals clicked cell + reveals surounding cells if there are no mines in a 3x3 radius.
 function revealCell(r, c) {
   if (
     //another boundary check and also checks if the cell has already been revealed.
@@ -169,22 +250,36 @@ function revealCell(r, c) {
     c < 0 ||
     c >= cols ||
     board[r][c].revealed
-  ) {
-    return;
-  }
+  ) return;
+  
 
   board[r][c].revealed = true;
  
 
-
+  
   if (board[r][c].neighborMines === 0 && !board[r][c].mine) {
     for (let dr = -1; dr <= 1; dr++) {
       for (let dc = -1; dc <= 1; dc++) {
-        revealCell(r + dr, c + dc);
+        let nr = r + dr;
+        let nc = c + dc;
+
+        if(
+          //checks that its not outside of bounds and makes it so multipliers dont get revealed
+          //when multi revealing.
+          nr >= 0 && nr < rows &&
+          nc >= 0 && nc < cols && !board[nr][nc].multiplier
+        ){
+        revealCell(nr, nc);
+        }
       }
     }
   }
-  updateScore(board[r][c].neighborMines * scoreMultiplier);
+  if (!board[r][c].multiplier) {
+    IncreaseScore(board[r][c].neighborMines * scoreIncrease);
+  }
+  if (board[r][c].multiplier) {
+    SetScore(score * scoreMultiplier); // bonus for multiplier
+  } 
 
 }
 
@@ -208,21 +303,24 @@ function updateBoard() {
         cell.classList.add("mine");
         cell.textContent = "💣";
       } 
+      else if (board[r][c].multiplier) {
+        cell.classList.add("multiplier");
+        cell.textContent = "🤑";
+      }
       //checks if it has any neighbouring mines, and if it does, it will display that number on the cell.
       else if (board[r][c].neighborMines > 0) {
         cell.textContent = board[r][c].neighborMines;
       }
     }
   });
-  
 
 
 
   
 }
-//AI CODE END
-function placeFlag (r, c)
-  {
+//toggles flag, both removes and places flag.
+function placeFlag (r, c) { 
+  
     if(gameOver) return;
     if(board[r][c].revealed) return;
 //grabs the DOM element that corresponse to the [r][c] position. lets think about this, if the position is [1][1], for it to correspond in the index, it needs to be 11,
@@ -236,29 +334,72 @@ if(cellElement.classList.contains("flag")) {
   cellElement.classList.remove("flag");
   cellElement.textContent = "";
   board[r][c].flag = false;
+
+  if(board[r][c].mine) {
+    minesLeft++;
+    console.log("mines left: ", minesLeft)
+  }
 }
 else {
   cellElement.classList.add("flag");
   cellElement.textContent = "🚩";
   board[r][c].flag = true;
+
+  if(board[r][c].mine) {
+    minesLeft--;
+    console.log("mines left: ", minesLeft);
+    if (minesLeft == 0)
+    {
+      GameWon();
+    }
+  }
 }
 
     
 
   }
-
-  function updateScore(scoreIncrease)
+//increases Score
+  function IncreaseScore(scoreIncrease)
   {
     score += scoreIncrease;
+    
+    UpdateScore();
+
+
+
+
+
+  }
+  //update Score visual.
+  function UpdateScore()
+  {
     if(score > highScore)
     {
       highScore = score;
-      let highScoreElement = document.getElementById("highScore").textContent = highScore;
+      document.getElementById("highScore").textContent = highScore;
     }
+    document.getElementById("score").textContent = score;
 
 
-   let scoreElement = document.getElementById("score").textContent = score;
+  }
+  //sets score to a set value, overrides score.
+  function SetScore(scoreValue)
+  {
+    score = scoreValue;
+    UpdateScore();
 
 
+  }
+//same as score but for gold.
+  function IncreaseGold(goldIncrease)
+  {
+    gold += goldIncrease;
+
+
+  }
+//same as score but for gold.
+  function UpdateGold()
+  {
+    document.getElementById("gold").textContent = gold;
 
   }
