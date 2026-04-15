@@ -8,7 +8,7 @@ let minesLeft;
 var score = 0;
 var highScore = 0;
 
-var gold;
+var gold = 0;
 
 
 var scoreMultiplier = 3;
@@ -209,14 +209,14 @@ function handleClick(r, c) {
 function GameOver()
 {
   gameOver = true;
-  restartButton.addEventListener("click", () => restartGame());
 showRestartBtn();
 }
 //gives you gold when you have flagged all mines
 function GameWon()
 {
-  showRestartBtn();
+  console.log("Game Won");
   IncreaseGold(score);
+  showRestartBtn();
 }
 //restarts the board and other data so you can play again. you keep your highscore and gold.
 function restartGame()
@@ -233,6 +233,7 @@ function restartGame()
 //makes the restartBtn visible and clickable
 function showRestartBtn()
 {
+  restartButton.addEventListener("click", () => restartGame());
   restartButton.style.display = "block";
 }
 //hides the restartBtn and makes it unclickable
@@ -350,6 +351,7 @@ else {
     console.log("mines left: ", minesLeft);
     if (minesLeft == 0)
     {
+      console.log("no Mines left");
       GameWon();
     }
   }
@@ -394,6 +396,7 @@ else {
   function IncreaseGold(goldIncrease)
   {
     gold += goldIncrease;
+    UpdateGold();
 
 
   }

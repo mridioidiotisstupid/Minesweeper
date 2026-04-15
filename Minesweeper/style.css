@@ -1,3 +1,10 @@
+
+body {
+display: flex;
+flex-direction: row;
+
+}
+
 #board {
   display: grid;
   gap: 2px;
@@ -30,3 +37,4 @@
 .cell.multiplier {
   background: yellow;
 }
+
